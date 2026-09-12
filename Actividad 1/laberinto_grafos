@@ -1,0 +1,128 @@
+# ==========================================
+# PARTE 1: MODELADO DEL GRAFO (Persona 1)
+# ==========================================
+
+# Matriz 9x9 (0=libre, 1=muro, 2=penalización, 3=premio, 9=meta)
+laberinto_matriz = [
+    [0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 1, 1, 0, 1, 0, 1, 0],
+    [0, 0, 0, 1, 0, 1, 0, 0, 0],
+    [1, 1, 0, 0, 0, 1, 1, 1, 0],
+    [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    [0, 1, 0, 1, 0, 1, 0, 1, 0],
+    [0, 1, 0, 0, 0, 1, 0, 0, 3],  # Premio (3)
+    [0, 1, 1, 1, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 1, 0, 2, 9]   # Penalización (2) y Meta (9)
+]
+
+def obtener_costo_celda(valor):
+    if valor == 0: 
+        return 1.0       # Normal
+    if valor == 2: 
+        return 3.0       # Penalización (triple)
+    if valor == 3: 
+        return 0.25      # Premio (cuarta parte)
+    if valor == 9: 
+        return 0.0       # Meta
+    return float('inf')             # Muro
+
+def construir_grafo_estados(matriz):
+    """
+    Convierte la matriz 9x9 en un lista de adyacencia (Grafo Dirigido).
+    Clave: Nodo Origen (x, y) -> Valor: Diccionario {Nodo Destino: Peso/Costo}
+    """
+    filas = len(matriz)
+    cols = len(matriz[0])
+    grafo = {}
+
+    for r in range(filas):
+        for c in range(cols):
+            if matriz[r][c] == 1:
+                continue  # Los muros no son estados transitables
+
+            nodo_actual = (r, c)
+            grafo[nodo_actual] = {}
+
+            # Transiciones de estado (Arriba, Abajo, Izquierda, Derecha)
+            movimientos = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            for dr, dc in movimientos:
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < filas and 0 <= nc < cols:
+                    if matriz[nr][nc] != 1:  # Si el estado destino no es muro
+                        costo = obtener_costo_celda(matriz[nr][nc])
+                        grafo[nodo_actual][(nr, nc)] = costo
+
+    return grafo
+
+
+# ==========================================
+# PARTE 2: MOTOR DE JUEGO E INTERFAZ (Persona 2)
+# ==========================================
+
+def imprimir_tablero(matriz, pos_actual, coins):
+    print(f"\n🪙 Monedas actuales: {coins}")
+    for i in range(len(matriz)):
+        fila_str = ""
+        for j in range(len(matriz[0])):
+            if (i, j) == pos_actual:
+                fila_str += " 🐭 "
+            elif matriz[i][j] == 1:
+                fila_str += " 🧱 "
+            elif matriz[i][j] == 2:
+                fila_str += " ⚠️ "
+            elif matriz[i][j] == 3:
+                fila_str += " 🎁 "
+            elif matriz[i][j] == 9:
+                fila_str += " 🏁 "
+            else:
+                fila_str += " ⬜ "
+        print(fila_str)
+    print()
+
+def iniciar_juego():
+    # Construcción del modelo de estados
+    grafo = construir_grafo_estados(laberinto_matriz)
+    
+    # Configuración inicial
+    pos_actual = (0, 0)
+    meta = (8, 8)
+    coins = 15.0  # Monedas iniciales ajustadas para permitir ganar
+
+    print("🐭 ¡BIENVENIDO AL LABERINTO BASADO EN GRAFOS! 🎮")
+    print("Controles: w=arriba, s=abajo, a=izquierda, d=derecha")
+    print("Leyenda: ⬜ Libre (1.0) | ⚠️ Penalización (3.0) | 🎁 Premio (0.25) | 🧱 Muro")
+
+    while True:
+        imprimir_tablero(laberinto_matriz, pos_actual, coins)
+
+        # Validación de derrota (Requisito 6)
+        if coins <= 0:
+            print("❌ Te quedaste sin coins. ¡Has perdido el juego!")
+            break
+
+        # Validación de victoria (Requisito 7)
+        if pos_actual == meta:
+            print("🎉 ¡Has llegado a la meta!")
+            print(f"✅ Tu puntuación final es de {coins} coins restantes.")
+            break
+
+        mov = input("Ingresa movimiento (w/a/s/d): ").strip().lower()
+        direcciones = {'w': (-1, 0), 's': (1, 0), 'a': (0, -1), 'd': (0, 1)}
+
+        if mov not in direcciones:
+            print("Movimiento inválido ❌")
+            continue
+
+        dr, dc = direcciones[mov]
+        pos_siguiente = (pos_actual[0] + dr, pos_actual[1] + dc)
+
+        # Consulta de transición en el Grafo
+        if pos_siguiente in grafo.get(pos_actual, {}):
+            costo = grafo[pos_actual][pos_siguiente]
+            coins -= costo
+            pos_actual = pos_siguiente
+        else:
+            print("Choque o movimiento fuera del mapa (transición no válida en el grafo) 🚧")
+
+if __name__ == "__main__":
+    iniciar_juego()
