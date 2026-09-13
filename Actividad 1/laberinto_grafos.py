@@ -6,47 +6,48 @@ laberinto_matriz = [
     [1, 1, 0, 0, 0, 1, 1, 1, 0],
     [0, 0, 2, 1, 3, 0, 0, 1, 0],
     [0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 2, 0, 0, 0, 1, 0, 0, 3],  # Premio (3)
+    [0, 2, 0, 0, 0, 1, 0, 0, 3],
     [0, 1, 1, 1, 0, 0, 3, 1, 0],
-    [2, 0, 0, 0, 0, 1, 0, 2, 9]   # Penalización (2) y Meta (9)
+    [2, 0, 0, 0, 0, 1, 0, 2, 9]
 ]
 
 def obtener_costo_celda(valor):
     if valor == 0: 
         return 1.0       # Normal
     if valor == 2: 
-        return 3.0       # Penalización (triple)
+        return 3.0       # Penalización: -3 coins
     if valor == 3: 
-        return 0.25      # Premio (cuarta parte)
+        return 0.25      # Premio: +1/4 coins
     if valor == 9: 
         return 0.0       # Meta
-    return float('inf')             # Muro
+    return float('inf')  # Muro
 
 def construir_grafo_estados(matriz):
     """
-    Convierte la matriz 9x9 en un lista de adyacencia (Grafo Dirigido).
+    Convierte la matriz 9x9 en un lista de adyacencia.
     Clave: Nodo Origen (x, y) -> Valor: Diccionario {Nodo Destino: Peso/Costo}
     """
     filas = len(matriz)
     cols = len(matriz[0])
     grafo = {}
 
+    # Transiciones de estado (Arriba, Abajo, Izquierda, Derecha)
+    movimientos = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
     for r in range(filas):
         for c in range(cols):
             if matriz[r][c] == 1:
-                continue  # Los muros no son estados transitables
+                continue  # Muro, se ignora
 
             nodo_actual = (r, c)
             grafo[nodo_actual] = {}
 
-            # Transiciones de estado (Arriba, Abajo, Izquierda, Derecha)
-            movimientos = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-            for dr, dc in movimientos:
-                nr, nc = r + dr, c + dc
-                if 0 <= nr < filas and 0 <= nc < cols:
-                    if matriz[nr][nc] != 1:  # Si el estado destino no es muro
-                        costo = obtener_costo_celda(matriz[nr][nc])
-                        grafo[nodo_actual][(nr, nc)] = costo
+            for dr, dc in movimientos: # Recorrer movimientos en x,y
+                nr, nc = r + dr, c + dc # Calcular posiciones vencinas
+                if 0 <= nr < filas and 0 <= nc < cols: # Comprueba que filas y columnas son válidas
+                    if matriz[nr][nc] != 1:  # Si la posición destino no es muro
+                        costo = obtener_costo_celda(matriz[nr][nc]) # Validar costo de celda destino
+                        grafo[nodo_actual][(nr, nc)] = costo # Agregar transición al grafo
 
     return grafo
 
@@ -114,7 +115,7 @@ def iniciar_juego():
             coins -= costo
             pos_actual = pos_siguiente
         else:
-            print("Choque o movimiento fuera del mapa (transición no válida en el grafo) 🚧")
+            print("Choque o movimiento fuera del mapa (transición no válida en el mapa) 🚧")
 
 if __name__ == "__main__":
     iniciar_juego()
