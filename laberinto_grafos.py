@@ -24,7 +24,7 @@ def obtener_costo_celda(valor):
 
 def construir_grafo_estados(matriz):
     """
-    Convierte la matriz 9x9 en un lista de adyacencia.
+    Convierte la matriz 9x9 en un grafo dirigido.
     Clave: Nodo Origen (x, y) -> Valor: Diccionario {Nodo Destino: Peso/Costo}
     """
     filas = len(matriz)
