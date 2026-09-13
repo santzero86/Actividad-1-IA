@@ -1,18 +1,14 @@
-# ==========================================
-# PARTE 1: MODELADO DEL GRAFO (Persona 1)
-# ==========================================
-
 # Matriz 9x9 (0=libre, 1=muro, 2=penalización, 3=premio, 9=meta)
 laberinto_matriz = [
-    [0, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 1, 1, 1, 0, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 3, 1, 0],
+    [3, 1, 1, 1, 2, 1, 0, 1, 0],
     [0, 0, 0, 1, 0, 1, 0, 0, 0],
     [1, 1, 0, 0, 0, 1, 1, 1, 0],
-    [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    [0, 0, 2, 1, 3, 0, 0, 1, 0],
     [0, 1, 0, 1, 0, 1, 0, 1, 0],
-    [0, 1, 0, 0, 0, 1, 0, 0, 3],  # Premio (3)
-    [0, 1, 1, 1, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 1, 0, 2, 9]   # Penalización (2) y Meta (9)
+    [0, 2, 0, 0, 0, 1, 0, 0, 3],  # Premio (3)
+    [0, 1, 1, 1, 0, 0, 3, 1, 0],
+    [2, 0, 0, 0, 0, 1, 0, 2, 9]   # Penalización (2) y Meta (9)
 ]
 
 def obtener_costo_celda(valor):
@@ -55,10 +51,6 @@ def construir_grafo_estados(matriz):
     return grafo
 
 
-# ==========================================
-# PARTE 2: MOTOR DE JUEGO E INTERFAZ (Persona 2)
-# ==========================================
-
 def imprimir_tablero(matriz, pos_actual, coins):
     print(f"\n🪙 Monedas actuales: {coins}")
     for i in range(len(matriz)):
@@ -69,7 +61,7 @@ def imprimir_tablero(matriz, pos_actual, coins):
             elif matriz[i][j] == 1:
                 fila_str += " 🧱 "
             elif matriz[i][j] == 2:
-                fila_str += " ⚠️ "
+                fila_str += " ⚠️  "
             elif matriz[i][j] == 3:
                 fila_str += " 🎁 "
             elif matriz[i][j] == 9:
