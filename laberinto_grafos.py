@@ -24,7 +24,7 @@ def obtener_costo_celda(valor):
 
 def construir_grafo_estados(matriz):
     """
-    Convierte la matriz 9x9 en una lista de adyacencia.
+    Convierte la matriz 9x9 en una lista de adyacencia, que simula un grafo de estados.
     Clave: Nodo Origen (x, y) -> Valor: Diccionario {Nodo Destino: Peso/Costo}
     """
     filas = len(matriz)
@@ -71,15 +71,67 @@ def imprimir_tablero(matriz, pos_actual, coins):
                 fila_str += " ⬜ "
         print(fila_str)
     print()
+    
+def bfs_camino(grafo, inicio, objetivo):
+    cola = [inicio]
+    visitados = {inicio}
+    predecesor = {inicio: None}
+    while cola:
+        nodo = cola.pop(0)
+        if nodo == objetivo:
+            # reconstrucción del camino
+            camino = []
+            while nodo is not None:
+                camino.append(nodo)
+                nodo = predecesor[nodo]
+            return list(reversed(camino))
+        
+        for vecino in grafo[nodo]:
+            if vecino not in visitados:
+                visitados.add(vecino)
+                predecesor[vecino] = nodo
+                cola.append(vecino) 
+    return None
+
+def dfs_camino(grafo, inicio, objetivo):
+    pila = [inicio]
+    visitados = {inicio}
+    predecesor = {inicio: None}
+    while pila:
+        nodo = pila.pop(-1)
+        if nodo == objetivo:
+            # reconstrucción del camino
+            camino = []
+            while nodo is not None:
+                camino.append(nodo)
+                nodo = predecesor[nodo]
+            return list(reversed(camino))
+        
+        for vecino in grafo[nodo]:
+            if vecino not in visitados:
+                visitados.add(vecino)
+                predecesor[vecino] = nodo
+                pila.append(vecino) 
+    return None
+
+def imprimir_grafo_coordenadas(grafo):
+    for nodo, vecinos in sorted(grafo.items()):
+        print(f"{nodo} = {list(vecinos.keys())}")
+
 
 def iniciar_juego():
     # Construcción del modelo de estados
     grafo = construir_grafo_estados(laberinto_matriz)
     
+    imprimir_grafo_coordenadas(grafo)  # Mostrar el grafo de estados al inicio del juego
+    
     # Configuración inicial
     pos_actual = (0, 0)
     meta = (8, 8)
     coins = 15.0  # Monedas iniciales ajustadas para permitir ganar
+    
+    print(f"Camino BFS: {bfs_camino(grafo, pos_actual, meta)}")
+    print(f"Camino DFS: {dfs_camino(grafo, pos_actual, meta)}")
 
     print("🐭 ¡BIENVENIDO AL LABERINTO BASADO EN GRAFOS! 🎮")
     print("Controles: w=arriba, s=abajo, a=izquierda, d=derecha")
