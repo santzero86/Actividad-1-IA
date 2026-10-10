@@ -130,8 +130,14 @@ def iniciar_juego():
     meta = (8, 8)
     coins = 15.0  # Monedas iniciales ajustadas para permitir ganar
     
-    print(f"Camino BFS: {bfs_camino(grafo, pos_actual, meta)}")
-    print(f"Camino DFS: {dfs_camino(grafo, pos_actual, meta)}")
+    camino_bfs = bfs_camino(grafo, pos_actual, meta)
+    camino_dfs = dfs_camino(grafo, pos_actual, meta)
+
+    print(f"Camino BFS: {camino_bfs}")
+    print(f"Puntos del camino BFS: {len(camino_bfs) - 1}")
+
+    print(f"Camino DFS: {camino_dfs}")
+    print(f"Puntos del camino DFS: {len(camino_dfs) - 1}")
 
     print("🐭 ¡BIENVENIDO AL LABERINTO BASADO EN GRAFOS! 🎮")
     print("Controles: w=arriba, s=abajo, a=izquierda, d=derecha")
