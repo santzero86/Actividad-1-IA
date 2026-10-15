@@ -4,6 +4,8 @@
 # - Santiago David Guerrero Jaramillo - 2419030
 # - Hugart Andres Estrada Velasco - 2610126
 
+import heapq
+
 # Matriz 9x9 (0=libre, 1=muro, 2=penalización, 3=premio, 9=meta)
 laberinto_matriz = [
     [0, 0, 0, 0, 0, 0, 3, 1, 0],
@@ -120,6 +122,50 @@ def dfs_camino(grafo, inicio, objetivo):
                 pila.append(vecino) 
     return None
 
+def bcu_camino(grafo, inicio, objetivo):
+    cola_prioridad = [(0, inicio)]
+    costos = {inicio: 0}
+    predecesor = {inicio: None}
+
+    while cola_prioridad:
+        costo_actual, nodo = heapq.heappop(cola_prioridad)
+
+        # Ignorar caminos que ya fueron superados por uno más barato
+        if costo_actual > costos[nodo]:
+            continue
+
+        # Si llegamos a la meta, reconstruimos el camino
+        if nodo == objetivo:
+            camino = []
+            while nodo is not None:
+                camino.append(nodo)
+                nodo = predecesor[nodo]
+
+            return list(reversed(camino)), costo_actual
+
+        for vecino, costo in grafo[nodo].items():
+            nuevo_costo = costo_actual + costo
+
+            if vecino not in costos or nuevo_costo < costos[vecino]:
+                costos[vecino] = nuevo_costo
+                predecesor[vecino] = nodo
+                heapq.heappush(
+                    cola_prioridad,
+                    (nuevo_costo, vecino)
+                )
+
+    return None, float('inf')
+
+def calcular_costo_camino(grafo, camino):
+    costo_total = 0
+
+    for i in range(len(camino) - 1):
+        origen = camino[i]
+        destino = camino[i + 1]
+        costo_total += grafo[origen][destino]
+
+    return costo_total
+
 def imprimir_grafo_coordenadas(grafo):
     for nodo, vecinos in sorted(grafo.items()):
         print(f"{nodo} = {list(vecinos.keys())}")
@@ -138,13 +184,31 @@ def iniciar_juego():
     
     camino_bfs = bfs_camino(grafo, pos_actual, meta)
     camino_dfs = dfs_camino(grafo, pos_actual, meta)
+    
+    costo_bfs = calcular_costo_camino(grafo, camino_bfs)
+    costo_dfs = calcular_costo_camino(grafo, camino_dfs)
 
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
     print(f"Camino BFS: {camino_bfs}")
-    print(f"Puntos del camino BFS: {len(camino_bfs) - 1}")
-
+    print(f"Movimientos BFS: {len(camino_bfs) - 1}")
+    print(f"Costo BFS: {costo_bfs}")
+    print(f"Coins finales BFS: {coins - costo_bfs}")
+    
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
     print(f"Camino DFS: {camino_dfs}")
-    print(f"Puntos del camino DFS: {len(camino_dfs) - 1}")
+    print(f"Movimientos DFS: {len(camino_dfs) - 1}")
+    print(f"Costo DFS: {costo_dfs}")
+    print(f"Coins finales DFS: {coins - costo_dfs}")    
 
+    camino_bcu, costo_bcu = bcu_camino(grafo, pos_actual, meta)
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
+    print(f"Camino BCU: {camino_bcu}")
+    print(f"Costo total del camino BCU: {costo_bcu}")
+    print(f"Coins iniciales: {coins}")
+    print(f"Coins finales: {coins - costo_bcu}")
+    print(f"Movimientos del camino BCU: {len(camino_bcu) - 1}")
+
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
     print("🐭 ¡BIENVENIDO AL LABERINTO BASADO EN GRAFOS! 🎮")
     print("Controles: w=arriba, s=abajo, a=izquierda, d=derecha")
     print("Leyenda: ⬜ Libre (1.0) | ⚠️ Penalización (3.0) | 🎁 Premio (0.25) | 🧱 Muro")
