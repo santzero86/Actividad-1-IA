@@ -1,3 +1,9 @@
+# Inteligencia Artificial - Grupo 80
+# Actividad 2: Laberinto basado en grafos / Niño rata / Bfs - Dfs / Algoritmo de costo uniforme BCU
+# Integrantes:
+# - Santiago David Guerrero Jaramillo - 2419030
+# - Hugart Andres Estrada Velasco - 2610126
+
 # Matriz 9x9 (0=libre, 1=muro, 2=penalización, 3=premio, 9=meta)
 laberinto_matriz = [
     [0, 0, 0, 0, 0, 0, 3, 1, 0],
