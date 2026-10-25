@@ -1,10 +1,12 @@
 # Inteligencia Artificial - Grupo 80
-# Actividad 2: Laberinto basado en grafos / Niño rata / Bfs - Dfs / Algoritmo de costo uniforme BCU
+# Actividad 2: Laberinto basado en grafos / Niño rata / Algoritmo A* h1, h2, h3
 # Integrantes:
 # - Santiago David Guerrero Jaramillo - 2419030
 # - Hugart Andres Estrada Velasco - 2610126
 
 import heapq
+import math
+
 
 # Matriz 9x9 (0=libre, 1=muro, 2=penalización, 3=premio, 9=meta)
 laberinto_matriz = [
@@ -18,6 +20,8 @@ laberinto_matriz = [
     [0, 1, 1, 1, 0, 0, 3, 1, 0],
     [2, 0, 0, 0, 0, 1, 0, 2, 9]
 ]
+
+COSTO_PASO_MINIMO = 1.0
 
 def obtener_costo_celda(valor):
     if valor == 0: 
@@ -59,6 +63,82 @@ def construir_grafo_estados(matriz):
 
     return grafo
 
+# HEURÍSTICA 1: Chebyshev (h1)
+# Calcula la distancia tomando el mayor valor entre las diferencias de filas y columnas.
+# Es admisible y monótona, pero resulta menos efectiva porque estima costos bajos y puede hacer que A* explore más nodos.
+
+def heuristica_1_chebyshev(nodo_actual, meta):
+    dr = abs(nodo_actual[0] - meta[0])
+    dc = abs(nodo_actual[1] - meta[1])
+    distancia = max(dr, dc)
+    return distancia * COSTO_PASO_MINIMO
+
+# HEURÍSTICA 2: Euclidiana (h2)
+# Calcula la distancia en línea recta entre el nodo actual y la meta mediante el teorema de Pitágoras.
+# Es admisible y monótona, y tiene una efectividad intermedia al ofrecer una estimación más precisa que Chebyshev.
+
+def heuristica_2_euclidiana(nodo_actual, meta):
+    dr = nodo_actual[0] - meta[0]
+    dc = nodo_actual[1] - meta[1]
+    distancia = math.sqrt(dr ** 2 + dc ** 2)
+    return distancia * COSTO_PASO_MINIMO
+
+# HEURÍSTICA 3: Manhattan (h3)
+# Suma las diferencias entre filas y columnas, considerando únicamente movimientos horizontales y verticales.
+# Es admisible y monótona, y suele guiar mejor a A* en cuadrículas de cuatro direcciones al dar estimaciones más ajustadas.
+
+def heuristica_3_manhattan(nodo_actual, meta):
+    dr = abs(nodo_actual[0] - meta[0])
+    dc = abs(nodo_actual[1] - meta[1])
+    distancia = dr + dc
+    return distancia * COSTO_PASO_MINIMO
+
+def a_estrella_camino(grafo, inicio, objetivo, funcion_heuristica):
+    """
+    Implementación de A* basada en las diapositivas de clase (f = g + h).
+    Utiliza una cola de prioridad basada en el valor f(n).
+    Retorna el camino óptimo, el costo total y el número de nodos expandidos.
+    """
+    # cola_prioridad guarda tuplas: (f_score, g_cost, nodo)
+    cola_prioridad = []
+    g_costos = {inicio: 0.0}
+    f_inicial = 0.0 + funcion_heuristica(inicio, objetivo)
+    heapq.heappush(cola_prioridad, (f_inicial, 0.0, inicio))
+    
+    predecesor = {inicio: None}
+    cerrados = set()
+    nodos_expandidos = 0
+
+    while cola_prioridad:
+        f_actual, g_actual, nodo = heapq.heappop(cola_prioridad)
+
+        if nodo in cerrados:
+            continue
+        cerrados.add(nodo)
+        nodos_expandidos += 1
+
+        # Criterio de parada: cuando se extrae la meta
+        if nodo == objetivo:
+            camino = []
+            curr = nodo
+            while curr is not None:
+                camino.append(curr)
+                curr = predecesor[curr]
+            return list(reversed(camino)), g_actual, nodos_expandidos
+
+        for vecino, costo in grafo[nodo].items():
+            if vecino in cerrados:
+                continue
+
+            nuevo_g = g_actual + costo
+            if vecino not in g_costos or nuevo_g < g_costos[vecino]:
+                g_costos[vecino] = nuevo_g
+                predecesor[vecino] = nodo
+                h_vecino = funcion_heuristica(vecino, objetivo)
+                nuevo_f = nuevo_g + h_vecino
+                heapq.heappush(cola_prioridad, (nuevo_f, nuevo_g, vecino))
+
+    return None, float('inf'), nodos_expandidos
 
 def imprimir_tablero(matriz, pos_actual, coins):
     print(f"\n🪙 Monedas actuales: {coins}")
@@ -207,6 +287,31 @@ def iniciar_juego():
     print(f"Coins iniciales: {coins}")
     print(f"Coins finales: {coins - costo_bcu}")
     print(f"Movimientos del camino BCU: {len(camino_bcu) - 1}")
+    
+    camino_a1, costo_a1, exp_a1 = a_estrella_camino(grafo, pos_actual, meta, heuristica_1_chebyshev)
+    camino_a2, costo_a2, exp_a2 = a_estrella_camino(grafo, pos_actual, meta, heuristica_2_euclidiana)
+    camino_a3, costo_a3, exp_a3 = a_estrella_camino(grafo, pos_actual, meta, heuristica_3_manhattan)
+    
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
+    print(f"A* con h1 (Chebyshev - Menos efectiva):")
+    print(f"Costo: {costo_a1} ") 
+    print(f"Movimientos: {len(camino_a1) - 1}") 
+    print(f"Nodos expandidos: {exp_a1}")
+    print(f"Coins finales: {coins - costo_a1}")
+    
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
+    print(f"A* con h2 (Euclidiana):")
+    print(f"Costo: {costo_a2}")
+    print(f"Movimientos: {len(camino_a2) - 1}")
+    print(f"Nodos expandidos: {exp_a2}")
+    print(f"Coins finales: {coins - costo_a2}")
+
+    print(f"----------------------------------------------------------------------------------------------------------------------------------")
+    print(f"A* con h3 (Manhattan - MÁS DOMINANTE):")
+    print(f"Costo: {costo_a3}")
+    print(f"Movimientos: {len(camino_a3) - 1}")
+    print(f"Nodos expandidos: {exp_a3}")
+    print(f"Coins finales: {coins - costo_a3}")
 
     print(f"----------------------------------------------------------------------------------------------------------------------------------")
     print("🐭 ¡BIENVENIDO AL LABERINTO BASADO EN GRAFOS! 🎮")
